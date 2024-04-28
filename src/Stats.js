@@ -1,13 +1,14 @@
 /**
  * @author mrdoob / http://mrdoob.com/
+ * Modified by AirConsole to make the stats 128x64 in size and expose fpsPanel, msPanel and memPanel
  */
 
-var Stats = function () {
-
+// var stats = function() {
+function Stats() {
 	var mode = 0;
 
 	var container = document.createElement( 'div' );
-	container.style.cssText = 'position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000';
+	container.style.cssText = 'cursor:pointer;opacity:0.9;z-index:10000';
 	container.addEventListener( 'click', function ( event ) {
 
 		event.preventDefault();
@@ -49,11 +50,12 @@ var Stats = function () {
 
 	}
 
+
 	showPanel( 0 );
 
 	return {
 
-		REVISION: 16,
+		REVISION: 17,
 
 		dom: container,
 
@@ -103,7 +105,10 @@ var Stats = function () {
 		// Backwards Compatibility
 
 		domElement: container,
-		setMode: showPanel
+		setMode: showPanel,
+		fpsPanel,
+		msPanel,
+		memPanel
 
 	};
 
@@ -114,18 +119,18 @@ Stats.Panel = function ( name, fg, bg ) {
 	var min = Infinity, max = 0, round = Math.round;
 	var PR = round( window.devicePixelRatio || 1 );
 
-	var WIDTH = 80 * PR, HEIGHT = 48 * PR,
-			TEXT_X = 3 * PR, TEXT_Y = 2 * PR,
-			GRAPH_X = 3 * PR, GRAPH_Y = 15 * PR,
-			GRAPH_WIDTH = 74 * PR, GRAPH_HEIGHT = 30 * PR;
+	var WIDTH = 128 * PR, HEIGHT = 64 * PR;
+	var	TEXT_X = 3 * PR, TEXT_Y = (2 * HEIGHT/48) * PR,
+			GRAPH_X = 3 * PR, GRAPH_Y = 15 * PR;
+	var	GRAPH_WIDTH = (WIDTH-6) * PR, GRAPH_HEIGHT = (HEIGHT-18) * PR;
 
 	var canvas = document.createElement( 'canvas' );
 	canvas.width = WIDTH;
 	canvas.height = HEIGHT;
-	canvas.style.cssText = 'width:80px;height:48px';
+	canvas.style.cssText = 'width:128px;height:64px';
 
 	var context = canvas.getContext( '2d' );
-	context.font = 'bold ' + ( 9 * PR ) + 'px Helvetica,Arial,sans-serif';
+	context.font = 'bold ' + ( 9 * PR * HEIGHT/48 ) + 'px Helvetica,Arial,sans-serif';
 	context.textBaseline = 'top';
 
 	context.fillStyle = bg;
@@ -168,4 +173,4 @@ Stats.Panel = function ( name, fg, bg ) {
 
 };
 
-export { Stats as default };
+// export { Stats as default };
