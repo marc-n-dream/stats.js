@@ -3,9 +3,14 @@
  * Modified by AirConsole to make the stats 128x64 in size and expose fpsPanel, msPanel and memPanel
  */
 
-// var stats = function() {
-function Stats() {
+var Stats = function(width = 80, height = 48) {
+// function Stats() {
 	var mode = 0;
+  
+	var round = Math.round;
+	var PR = round( window.devicePixelRatio || 1 );
+  var WIDTH = width * PR;
+  var HEIGHT = height * PR;
 
 	var container = document.createElement( 'div' );
 	container.style.cssText = 'cursor:pointer;opacity:0.9;z-index:10000';
@@ -41,12 +46,12 @@ function Stats() {
 
 	var beginTime = ( performance || Date ).now(), prevTime = beginTime, frames = 0;
 
-	var fpsPanel = addPanel( new Stats.Panel( 'FPS', '#0ff', '#002' ) );
-	var msPanel = addPanel( new Stats.Panel( 'MS', '#0f0', '#020' ) );
+	var fpsPanel = addPanel( new Stats.Panel( 'FPS', '#0ff', '#002', WIDTH, HEIGHT ) );
+	var msPanel = addPanel( new Stats.Panel( 'MS', '#0f0', '#020', WIDTH, HEIGHT ) );
 
 	if ( self.performance && self.performance.memory ) {
 
-		var memPanel = addPanel( new Stats.Panel( 'MB', '#f08', '#201' ) );
+		var memPanel = addPanel( new Stats.Panel( 'MB', '#f08', '#201', WIDTH, HEIGHT ) );
 
 	}
 
@@ -114,15 +119,14 @@ function Stats() {
 
 };
 
-Stats.Panel = function ( name, fg, bg ) {
+Stats.Panel = function ( name, fg, bg, WIDTH = 80, HEIGHT = 48 ) {
 
 	var min = Infinity, max = 0, round = Math.round;
 	var PR = round( window.devicePixelRatio || 1 );
 
-	var WIDTH = 128 * PR, HEIGHT = 64 * PR;
 	var	TEXT_X = 3 * PR, TEXT_Y = (2 * HEIGHT/48) * PR,
-			GRAPH_X = 3 * PR, GRAPH_Y = 15 * PR;
-	var	GRAPH_WIDTH = (WIDTH-6) * PR, GRAPH_HEIGHT = (HEIGHT-18) * PR;
+			GRAPH_X = 3 * PR, GRAPH_Y = 15 * HEIGHT/48 * PR,
+	  	GRAPH_WIDTH = (WIDTH-6) * PR, GRAPH_HEIGHT = (HEIGHT-18*HEIGHT/48) * PR;
 
 	var canvas = document.createElement( 'canvas' );
 	canvas.width = WIDTH;
@@ -173,4 +177,4 @@ Stats.Panel = function ( name, fg, bg ) {
 
 };
 
-// export { Stats as default };
+export { Stats as default };

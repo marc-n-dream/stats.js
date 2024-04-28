@@ -1,3 +1,4 @@
+import terser from '@rollup/plugin-terser';
 export default {
 	input: 'src/Stats.js',
 	output: [
@@ -11,6 +12,14 @@ export default {
 			format: 'es',
 			name: 'Stats',
 			file: 'build/stats.module.js',
+			indent: '\t'
+		},
+		{
+			format: 'iife',
+			name: 'Stats',
+			file: 'build/stats.min.js',
+      compact: true,
+      plugins: [terser()],
 			indent: '\t'
 		}
 	]

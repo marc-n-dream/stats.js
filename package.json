@@ -29,7 +29,8 @@
   },
   "homepage": "https://github.com/mrdoob/stats.js",
   "devDependencies": {
-    "rollup": "^2.3.2",
-    "google-closure-compiler": "20200224.0.0"
+    "@rollup/plugin-terser": "0.4.4",
+    "google-closure-compiler": "20200224.0.0",
+    "rollup": "^2.3.2"
   }
 }
