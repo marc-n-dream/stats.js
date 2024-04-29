@@ -1,184 +1,164 @@
+
 /**
- * @author mrdoob / http://mrdoob.com/
- * Modified by AirConsole to make the stats 128x64 in size and expose fpsPanel, msPanel and memPanel
+ * Creates a Stats Panel object.
+ *
+ * @param {string} name - The name of the panel.
+ * @param {string} fg - The foreground color for the panel. Used if evaluateStatsColor is not overridden.
+ * @param {string} bg - The background color for the panel.
+ * @param {number} [width=80] - The width of the panel (in pixels).
+ * @param {number} [height=48] - The height of the panel (in pixels).
+ * @param {boolean} [showMaximum=false] - Whether to show the maximum value in the panel.
+ * @return {object} - The Panel object.
+ */
+function StatsPanel(name, fg, bg, width = 80, height = 48, showMaximum = false) {
+  let min = Infinity;
+  let max = 0;
+  const
+    { round } = Math;
+  const PR = round(window.devicePixelRatio || 1);
+
+  const WIDTH = width * PR;
+  const HEIGHT = height * PR;
+  const TEXT_X = 3 * PR;
+  const TEXT_Y = 2 * (height / 48) * PR;
+  const GRAPH_X = 3 * PR;
+  const GRAPH_Y = 15 * PR;
+  const GRAPH_WIDTH = (width - 6) * PR;
+  const GRAPH_HEIGHT = (height - 18) * (height / 48) * PR;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  canvas.style.cssText = `width:${width}px;height:${height}px`;
+
+  const context = canvas.getContext('2d');
+  context.font = `bold ${(9 * PR * (height / 48))}px Helvetica,Arial,sans-serif`;
+  context.textBaseline = 'top';
+
+  context.fillStyle = bg;
+  context.fillRect(0, 0, WIDTH, HEIGHT);
+
+  context.fillStyle = fg;
+  context.fillText(name, TEXT_X, TEXT_Y);
+  context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
+
+  context.fillStyle = bg;
+  context.globalAlpha = 0.9;
+  context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
+
+  return {
+
+    dom: canvas,
+
+    /**
+     * Evaluates the performance color based on the given value.
+     *
+     * @param {number} value - The value used to evaluate the performance color.
+     * @param {number} maxValue - The maximum value used to evaluate the performance color.
+     * @return {string} - The color representing the performance.
+     */
+    // eslint-disable-next-line no-unused-vars
+    evaluateStatsColor(value, maxValue) {
+      return fg;
+    },
+
+    update(value, maxValue) {
+      min = Math.min(min, value);
+      max = Math.max(max, value);
+
+      context.fillStyle = bg;
+      context.globalAlpha = 1;
+      context.fillRect(0, 0, WIDTH, GRAPH_Y);
+
+      context.fillStyle = this.evaluateStatsColor(value, maxValue);
+      if (showMaximum) {
+        context.fillText(`${round(value)}${name} (${round(min)}-${round(max)})/${maxValue}`, TEXT_X, TEXT_Y);
+      } else {
+        context.fillText(`${round(value)}${name} (${round(min)}-${round(max)})`, TEXT_X, TEXT_Y);
+      }
+
+      context.drawImage(
+        canvas,
+        GRAPH_X + PR,
+        GRAPH_Y,
+        GRAPH_WIDTH - PR,
+        GRAPH_HEIGHT,
+        GRAPH_X,
+        GRAPH_Y,
+        GRAPH_WIDTH - PR,
+        GRAPH_HEIGHT,
+      );
+
+      context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, GRAPH_HEIGHT);
+
+      context.fillStyle = bg;
+      context.globalAlpha = 0.9;
+      context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, round((1 - (value / maxValue)) * GRAPH_HEIGHT));
+    },
+
+  };
+}
+
+/**
+ * Creates a Stats object for displaying performance statistics.
+ *
+ * @param {number} width - The width of the Stats object in pixels. Default is 80.
+ * @param {number} height - The height of the Stats object in pixels. Default is 48.
+ * @param {boolean} showMaximum - Whether to show the maximum value or not. Default is false.
+ * @returns {Object} - The Stats object with the following properties:
+ *   - REVISION: The revision number of the Stats object.
+ *   - currentPanelIndex: The index of the currently shown panel.
+ *   - dom: The container DOM element of the Stats object.
+ *   - addPanel: A function to add a new panel to the Stats object.
+ *   - showPanel: A function to show a specific panel in the Stats object.
+ *   - fpsPanel: The panel for displaying frames per second.
+ *   - msPanel: The panel for displaying milliseconds per frame.
+ *   - memPanel: The panel for displaying memory usage in megabytes (if available).
  */
 
-var Stats = function(width = 80, height = 48) {
-  // function Stats(width = 80, height = 48) {
-    var mode = 0;
-  
-    var container = document.createElement('div');
-    container.style.cssText = 'cursor:pointer;opacity:0.9;z-index:10000';
-    container.addEventListener('click', function(event) {
-  
-      event.preventDefault();
-      showPanel(++mode % container.children.length);
-  
-    }, false);
-  
-    //
-  
-    function addPanel(panel) {
-  
-      container.appendChild(panel.dom);
-      return panel;
-  
+// var Stats = function(width = 80, height = 48) {
+function Stats(width = 80, height = 48, showMaximum = false) {
+  let currentPanelIndex = 0;
+  const container = document.createElement('div');
+  container.style.cssText = 'opacity:0.71;z-index:10000';
+
+  function addPanel(panel) {
+    container.appendChild(panel.dom);
+    return panel;
+  }
+
+  function showPanel(id) {
+    for (let i = 0; i < container.children.length; i += 1) {
+      container.children[i].style.display = i === id ? 'block' : 'none';
     }
-  
-    function showPanel(id) {
-  
-      for (var i = 0; i < container.children.length; i++) {
-  
-        container.children[i].style.display = i === id ? 'block' : 'none';
-  
-      }
-  
-      mode = id;
-  
-    }
-  
-    //
-  
-    var beginTime = (performance || Date).now(), prevTime = beginTime, frames = 0;
-  
-    var fpsPanel = addPanel(new Stats.Panel('FPS', '#0ff', '#002', width, height));
-    var msPanel = addPanel(new Stats.Panel('MS', '#0f0', '#020', width, height));
-  
-    if (self.performance && self.performance.memory) {
-  
-      var memPanel = addPanel(new Stats.Panel('MB', '#f08', '#201', width, height));
-  
-    }
-  
-  
-    showPanel(0);
-  
-    return {
-  
-      REVISION: 17,
-  
-      dom: container,
-  
-      addPanel: addPanel,
-      showPanel: showPanel,
-  
-      begin: function() {
-  
-        beginTime = (performance || Date).now();
-  
-      },
-  
-      end: function() {
-  
-        frames++;
-  
-        var time = (performance || Date).now();
-  
-        msPanel.update(time - beginTime, 200);
-  
-        if (time >= prevTime + 1000) {
-  
-          fpsPanel.update((frames * 1000) / (time - prevTime), 100);
-  
-          prevTime = time;
-          frames = 0;
-  
-          if (memPanel) {
-  
-            var memory = performance.memory;
-            memPanel.update(memory.usedJSHeapSize / 1048576, memory.jsHeapSizeLimit / 1048576);
-  
-          }
-  
-        }
-  
-        return time;
-  
-      },
-  
-      update: function() {
-  
-        beginTime = this.end();
-  
-      },
-  
-      // Backwards Compatibility
-  
-      domElement: container,
-      setMode: showPanel,
-      fpsPanel,
-      msPanel,
-      memPanel
-    };
-  
+
+    currentPanelIndex = id;
+  }
+
+  const fpsPanel = addPanel(new StatsPanel('FPS', '#0ff', '#002', width, height, showMaximum));
+  const msPanel = addPanel(new StatsPanel('MS', '#0f0', '#020', width, height, showMaximum));
+
+  let memPanel;
+  if (window.performance && window.performance.memory) {
+    memPanel = addPanel(new StatsPanel('MB', '#f08', '#201', width, height, showMaximum));
+  }
+
+  showPanel(0);
+
+  return {
+
+    REVISION: 17,
+    currentPanelIndex,
+
+    dom: container,
+
+    addPanel,
+    showPanel,
+
+    fpsPanel,
+    msPanel,
+    memPanel,
   };
-  
-  Stats.Panel = function(name, fg, bg, width = 80, height = 48) {
-  
-    var min = Infinity, max = 0, round = Math.round;
-    var PR = round(window.devicePixelRatio || 1);
-  
-    var WIDTH = width * PR, HEIGHT = height * PR,
-        TEXT_X= 3 * PR, TEXT_Y = 2 * height/48 * PR,
-        GRAPH_X= 3 * PR, GRAPH_Y = 15 * PR,
-        GRAPH_WIDTH = (width - 6) * PR, GRAPH_HEIGHT = (height - 18) * height / 48 * PR;
-  
-    var canvas = document.createElement('canvas');
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;
-    canvas.style.cssText = `width:${width}px;height:${width}px`;
-  
-    var context = canvas.getContext('2d');
-    context.font = `bold ${(9 * PR * height / 48)}px Helvetica,Arial,sans-serif`;
-    context.textBaseline = 'top';
-  
-    context.fillStyle = bg;
-    context.fillRect(0, 0, WIDTH, HEIGHT);
-  
-    context.fillStyle = fg;
-    context.fillText(name, TEXT_X, TEXT_Y);
-    context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
-  
-    context.fillStyle = bg;
-    context.globalAlpha = 0.9;
-    context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
-  
-    return {
-  
-      dom: canvas,
-  
-      update: function(value, maxValue) {
-  
-        min = Math.min(min, value);
-        max = Math.max(max, value);
-  
-        context.fillStyle = bg;
-        context.globalAlpha = 1;
-        context.fillRect(0, 0, WIDTH, GRAPH_Y);
-        context.fillStyle = fg;
-        context.fillText(round(value) + ' ' + name + ' (' + round(min) + '-' + round(max) + ')', TEXT_X, TEXT_Y);
-  
-        context.drawImage(canvas,
-          GRAPH_X + PR,
-          GRAPH_Y,
-          GRAPH_WIDTH - PR,
-          GRAPH_HEIGHT,
-          GRAPH_X,
-          GRAPH_Y,
-          GRAPH_WIDTH - PR,
-          GRAPH_HEIGHT);
-  
-        context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, GRAPH_HEIGHT);
-  
-        context.fillStyle = bg;
-        context.globalAlpha = 0.9;
-        context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, round((1 - (value / maxValue)) * GRAPH_HEIGHT));
-  
-      }
-  
-    };
-  
-  };
-  
-  export { Stats as default };
-  
+}
+
+export { Stats, StatsPanel };
