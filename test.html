@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <title>Snake Game</title>
+    <style type="text/css">
+      #gameBoard {
+        width: 600px;
+        height: 600px;
+        background-color: #EBEBEB;
+        border: solid 1px black;
+      }
+
+      .snake {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background-color: green;
+      }
+
+      .food {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background-color: red;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gameBoard"></div>
+
+    <script type="text/javascript">
+
+      // Initialize the game board
+      var board = document.getElementById("gameBoard");
+      for (var i = 0; i < 30; i++) {
+        for (var j = 0; j < 30; j++) {
+          var div = document.createElement('div');
+          div.style.top = i * 20 + "px";
+          div.style.left = j * 20 + "px";
+          board.appendChild(div);
+        }
+      }
+
+      // Initialize the snake
+      var head = document.getElementsByClassName("snake")[0];
+      var tail = document.getElementsByClassName("snake")[1];
+      head.classList.add('head');
+      tail.classList.add('tail');
+      head.style.top = "580px";
+      head.style.left = "340px";
+
+      // Initialize the food
+      var food = document.createElement('div');
+      food.classList.add('food');
+      board.appendChild(food);
+
+      function moveSnake() {
+        if (head.style.top == food.style.top && head.style.left == food.style.left) {
+          food.style.top = Math.floor(Math.random()*30)*20 + "px";
+          food.style.left = Math.floor(Math.random()*30)*20 + "px";
+        } else {
+          var prevTail = tail;
+          for (var i = 1; i < document.getElementsByClassName("snake").length; i++) {
+            var currentSnake = document.getElementsByClassName("snake")[i];
+            if (currentSnake.style.top == head.style.top && currentSnake.style.left == head.style.left) {
+              return;
+            } else {
+              prevTail.style.top = currentSnake.style.top;
+              prevTail.style.left = currentSnake.style.left;
+              prevTail = currentSnake;
+            }
+          }
+        }
+      }
+
+      document.onkeydown = function(e){
+        e = e || window.event;
+        if (e.keyCode == '38') { // up arrow
+          head.classList.remove('head');
+          head.style.top = parseInt(head.style.top) - 20 + "px";
+          moveSnake();
+          head.classList.add('head');
+        } else if (e.keyCode == '40') { // down arrow
+          head.classList.remove('head');
+          head.style.top = parseInt(head.style.top) + 20 + "px";
+          moveSnake();
+          head.classList.add('head');
+        } else if (e.keyCode == '37') { // left arrow
+          head.classList.remove('head');
+          head.style.left = parseInt(head.style.left) - 20 + "px";
+          moveSnake();
+          head.classList.add('head');
+        } else if (e.keyCode == '39') { // right arrow
+          head.classList.remove('head');
+          head.style.left = parseInt(head.style.left) + 20 + "px";
+          moveSnake();
+          head.classList.add('head');
+        }
+      };
+
+    </script>
+  </body>
+</html>

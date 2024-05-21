@@ -10,7 +10,7 @@
  * @param {boolean} [showMaximum=false] - Whether to show the maximum value in the panel.
  * @return {object} - The Panel object.
  */
-function StatsPanel(name, fg, bg, width = 80, height = 48, showMaximum = false) {
+export function StatsPanel(name, fg, bg, width = 80, height = 48, showMaximum = false) {
   let min = Infinity;
   let max = 0;
   const
@@ -117,7 +117,7 @@ function StatsPanel(name, fg, bg, width = 80, height = 48, showMaximum = false) 
  */
 
 // var Stats = function(width = 80, height = 48) {
-function Stats(width = 80, height = 48, showMaximum = false) {
+export function Stats(width = 80, height = 48, showMaximum = false) {
   let currentPanelIndex = 0;
   const container = document.createElement('div');
   container.style.cssText = 'opacity:0.71;z-index:10000';
@@ -160,5 +160,3 @@ function Stats(width = 80, height = 48, showMaximum = false) {
     memPanel,
   };
 }
-
-export { Stats, StatsPanel };
